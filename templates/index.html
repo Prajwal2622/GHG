@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHG Emission Calculator</title>
+    <style>
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            height: 50px; /* Adjust the height as needed */
+            margin-right: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #f4f4f9;
+            border-top: 1px solid #ddd;
+        }
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .devices-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .device { display: flex; flex-direction: column; align-items: center; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .device img { width: 60px; height: 60px; margin-bottom: 10px; }
+        .device label { font-weight: bold; margin-bottom: 8px; text-align: center; }
+        .device input { margin: 5px 0; width: 80%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .transport-section { margin-top: 20px; }
+        .transport-section input, .transport-section select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 15px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #45a049; }
+        .result { margin-top: 20px; font-size: 18px; font-weight: bold; text-align: center; color: #0d002c; }
+        .autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; z-index: 1000; width: calc(100% - 22px); }
+        .autocomplete-suggestion { padding: 10px; cursor: pointer; }
+        .autocomplete-suggestion:hover { background-color: #f0f0f0; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 200px; background-color: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #555 transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="static/Attero_Logo_White png-01 (1).png" alt="Attero Logo">
+
+    </div>
+    <div class="container">
+        <h2 style="text-align: center;">GHG Emission Calculator</h2>
+        <div class="devices-grid" id="devices"></div>
+        <div class="transport-section">
+            <h3>Transportation Details</h3>
+            <input type="text" id="origin" placeholder="Origin City" autocomplete="off">
+            <div id="origin-suggestions" class="autocomplete-suggestions"></div>
+            <input type="text" id="destination" placeholder="Destination City" autocomplete="off">
+            <div id="destination-suggestions" class="autocomplete-suggestions"></div>
+            <div class="tooltip">
+                <select id="vehicle">
+                    <option value="LDV">Light Duty Vehicle (LDV)</option>
+                    <option value="MDV">Medium Duty Vehicle (MDV)</option>
+                    <option value="HDV">Heavy Duty Vehicle (HDV)</option>
+                </select>
+                <span class="tooltiptext">
+                    <strong>Vehicle Categories:</strong><br>
+                    - LDV: Light Duty Vehicle (<3.5 Tonnes)<br>
+                    - MDV: Medium Duty Vehicle (<12 Tonnes)<br>
+                    - HDV: Heavy Duty Vehicle (>12 Tonnes)
+                </span>
+            </div>
+            <input type="number" id="num-vehicles" placeholder="Number of Vehicles" min="0">
+        </div>
+        <button onclick="calculateEmissions()">Calculate Total CO2e Saved</button>
+        <div class="result" id="result">
+            <div>GHG Emissions from E-waste: <span id="e-waste-result">0</span> kg CO2e</div>
+            <div>GHG Emissions from Transportation: <span id="transport-result">0</span> kg CO2e</div>
+        </div>
+    </div>
+
+    <script>
+        const devices = {
+            "Laptop": "static/laptop.png",
+            "Desktop": "static/pc.png",
+            "Server": "static/servers.png",
+            "Mobile/Tablet": "static/smartphone.png",
+            "Printer": "static/printer.png",
+            "TV": "static/tv.png",
+            "Microwave": "static/microwave.png",
+            "LCD TV/Monitor": "static/monitor.png",
+            "Washing Machine": "static/washing-machine.png",
+            "Refrigerator": "static/frig.png",
+            "Air Conditioners": "static/air-conditioner.png",
+            "Li-ion batteries": "static/battery.png",
+            "Routers": "static/wifi-router.png",
+            "Cables": "static/power-plug.png",
+            "Water Boilers": "static/boiler.png"
+        };
+
+        const devicesContainer = document.getElementById('devices');
+
+        for (let device in devices) {
+            devicesContainer.innerHTML += `
+                <div class="device">
+                    <img src="${devices[device]}" alt="${device}">
+                    <label>${device}</label>
+                    <input type="number" placeholder="Units" id="${device}-units" min="0">
+                    <input type="number" placeholder="Weight (kg)" id="${device}-weight" min="0">
+                </div>
+            `;
+        }
+
+        // Autocomplete for cities
+        async function getCitySuggestions(query) {
+            const url = `https://nominatim.openstreetmap.org/search?city=${query}&country=India&format=json`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.map(city => city.display_name);
+        }
+
+        function showSuggestions(inputElement, suggestionsElement) {
+            inputElement.addEventListener('input', async () => {
+                const query = inputElement.value;
+                if (query.length >= 2) {
+                    const suggestions = await getCitySuggestions(query);
+                    suggestionsElement.innerHTML = suggestions.map(city => `
+                        <div class="autocomplete-suggestion" onclick="selectSuggestion('${inputElement.id}', '${city}')">${city}</div>
+                    `).join('');
+                } else {
+                    suggestionsElement.innerHTML = '';
+                }
+            });
+        }
+
+        function selectSuggestion(inputId, city) {
+            document.getElementById(inputId).value = city;
+            document.getElementById(`${inputId}-suggestions`).innerHTML = '';
+        }
+
+        showSuggestions(document.getElementById('origin'), document.getElementById('origin-suggestions'));
+        showSuggestions(document.getElementById('destination'), document.getElementById('destination-suggestions'));
+
+        function calculateEmissions() {
+            const items = [];
+            for (let device in devices) {
+                const quantity = parseInt(document.getElementById(`${device}-units`).value) || 0;
+                const weight = parseFloat(document.getElementById(`${device}-weight`).value) || 0;
+                if (quantity > 0 || weight > 0) {
+                    items.push({ device, quantity, weight });
+                }
+            }
+
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const vehicle = document.getElementById('vehicle').value;
+            const numVehicles = parseInt(document.getElementById('num-vehicles').value) || 0;
+
+            fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items, origin, destination, vehicle, num_vehicles: numVehicles })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('e-waste-result').innerText = data.e_waste_co2e;
+                document.getElementById('transport-result').innerText = data.transport_co2e;
+            });
+        }
+    </script>
+     <div class="footer">
+        <p>
+            Contact us: <a href="mailto:info@attero.in">info@attero.in</a> | 
+            <a href="tel:+919322467309">+91 9322467309</a> | 
+            <a href="https://attero.in" target="_blank">attero.in</a>
+        </p>
+    </div>
+</body>
+</html>
