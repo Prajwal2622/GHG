@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GHG Emission Calculator</title>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+
     <style>
         .header {
             display: flex;
@@ -37,9 +39,9 @@
         .device label { font-weight: bold; margin-bottom: 8px; text-align: center; }
         .device input { margin: 5px 0; width: 80%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
         .transport-section { margin-top: 20px; }
-        .transport-section input, .transport-section select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .transport-section input, .transport-section select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
         button { width: 100%; padding: 15px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #45a049; }
+        button:hover { background-color: #200a83; }
         .result { margin-top: 20px; font-size: 18px; font-weight: bold; text-align: center; color: #0d002c; }
         .autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; z-index: 1000; width: calc(100% - 22px); }
         .autocomplete-suggestion { padding: 10px; cursor: pointer; }
@@ -52,7 +54,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="static/Attero_Logo_White png-01 (1).png" alt="Attero Logo">
+        <img src="static/logo.png" alt="Attero Logo">
 
     </div>
     <div class="container">
@@ -173,6 +175,7 @@
                 document.getElementById('e-waste-result').innerText = data.e_waste_co2e;
                 document.getElementById('transport-result').innerText = data.transport_co2e;
             });
+            <p>*The savings in terms of CO₂ emissions have been calculated using the Life Cycle Thinking (LCT) approach. This methodology assesses environmental impacts in terms of equivalent CO₂ emissions by analyzing the recycling processes of various materials. The Life Cycle Thinking approach accounts for the benefits of recycling by quantifying avoided emissions from raw material extraction and primary production, which would otherwise occur if e-waste and end-of-life batteries were not properly recycled. The methodology and data utilized in these calculations are derived from credible sources, including industry research, and globally recognized databases such as Defra, Ecoinvent and the EPA Greenhouse Gas Equivalents Calculator.</p>
         }
     </script>
      <div class="footer">
